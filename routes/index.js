@@ -1091,11 +1091,25 @@ router.post('/add', async function (req, res, next) {
       });
 
       const mailOptions = {
-        from: 'devvaghani89@gmail.com', // Sender address
+        from: "devvaghani89@gmail.com", // Sender address
         to: req.body.email, // Manager's email address
-        subject: 'Account Created Successfully',
-        text: `Dear ${req.body.username},\n\nYour account has been created successfully.\n\nUsername: ${req.body.username}\nPassword: ${req.body.password}\n\nPlease keep this information secure.\n\nBest regards,\nYour Team`,
-      };
+        subject: "Your Account Has Been Successfully Created",
+        text: `Dear ${req.body.username},
+
+          Welcome to [TMC TASK MANAGEMENT SYSTEM]!
+
+          Your account has been successfully created. Below are your login details:
+
+          🔹 **Username:** ${req.body.username}  
+          🔹 **Password:** ${req.body.password}  
+
+          For security reasons, we recommend changing your password after logging in for the first time. 
+
+          If you did not request this account or need any assistance, please contact our support team.
+
+          Best regards,  
+          [TMC TASK MANAGEMENT SYSTEM]`,
+        };
 
       // Send the email
       await transporter.sendMail(mailOptions);
@@ -1149,11 +1163,20 @@ router.post('/otp', async function (req, res, next) {
       otpStorage = otp;
       uemail = email;
       var mailOptions = {
-        from: 'devvaghani89@gmail.com',
+        from: "devvaghani89@gmail.com",
         to: `${email}`,
-        subject: 'otp for verification',
-        text: `${otp}`,
-      };
+        subject: "Your OTP for Verification",
+        text: `Dear User,
+
+          Your One-Time Password (OTP) for verification is: ${otp}
+
+          Please use this code to complete your verification process. This OTP is valid for a limited time and should not be shared with anyone.
+
+          If you did not request this, please ignore this email.
+
+          Best regards,  
+          [TMC TASK MANAGEMENT SYSTEM]`,
+        };
 
       const transporter = nodemailer.createTransport({
         service: "gmail", // Use your email service (e.g., Gmail, Outlook)
@@ -1212,6 +1235,7 @@ router.post('/checkotp', async function (req, res, next) {
     })
   }
 })
+
 // for new password
 router.post('/newpassword', async function (req, res, next) {
 
