@@ -1,15 +1,15 @@
-var express = require('express');
+var express = require("express");
 var router = express.Router();
 const user = require("../models/user");
 const task = require("../models/task");
 const taskforworker = require("../models/taskforworker");
-const bcrypt = require('bcrypt');
+const bcrypt = require("bcrypt");
 const mongoose = require("mongoose");
 const manager = require("../models/manager");
 
 /* GET home page. */
-router.get('/', function (req, res, next) {
-  res.render('index', { title: 'Express' });
+router.get("/", function (req, res, next) {
+  res.render("index", { title: "Express" });
 });
 
 // Route to update task status
@@ -28,7 +28,7 @@ router.patch("/updatetaskstatus/:id", async (req, res) => {
     const taskExists = await taskforworker.findById(taskId);
     if (!taskExists) {
       return res.status(404).json({ message: "Task not found" });
-    } 
+    }
 
     console.log("🔹 Received Request:", { taskId, status });
 
@@ -213,7 +213,13 @@ router.patch("/updatetaskmsg/:id", async (req, res) => {
     const { id: taskId } = req.params;
     const { nameofworker, msg, actions, date } = req.body;
 
-    console.log("🔹 Received Request:", { taskId, nameofworker, msg, actions, date });
+    console.log("🔹 Received Request:", {
+      taskId,
+      nameofworker,
+      msg,
+      actions,
+      date,
+    });
 
     // ✅ Validate MongoDB ObjectId format
     if (!mongoose.Types.ObjectId.isValid(taskId)) {
@@ -246,7 +252,13 @@ router.patch("/updatetaskmsg/:id", async (req, res) => {
     // ✅ Update `managerdeclinemsg` field
     const updatedTask = await task.findByIdAndUpdate(
       taskId,
-      { $set: { managerdeclinemsg: msg, manageraction: actions, declinedate: date } },
+      {
+        $set: {
+          managerdeclinemsg: msg,
+          manageraction: actions,
+          declinedate: date,
+        },
+      },
       { new: true, runValidators: true }
     );
 
@@ -446,7 +458,7 @@ router.patch("/redeclareworkertask/:id", async (req, res) => {
           "actionStatuses.$[elem].msg": "",
           "actionStatuses.$[elem].date": "",
           "actionStatuses.$[elem].worker": workerName, // Assign correct worker name
-          workers: [workerName],// 🔹 Remove all existing workers and store only workerName
+          workers: [workerName], // 🔹 Remove all existing workers and store only workerName
         },
       },
       {
@@ -624,7 +636,6 @@ router.patch("/updateworkertask/:taskId", async (req, res) => {
   }
 });
 
-
 router.delete("/deleteworkertask/:id", async (req, res) => {
   try {
     const { id } = req.params;
@@ -663,16 +674,20 @@ module.exports = router;
 
 // -------------------table joint for boss-------------------
 
-router.get('/taskalldetail', async function (req, res, next) {
+router.get("/taskalldetail", async function (req, res, next) {
   try {
     const tasks = await task.find(); // Get tasks
-    const taskIds = tasks.map(t => t._id);
+    const taskIds = tasks.map((t) => t._id);
 
-    const taskForWorker = await taskforworker.find({ taskid: { $in: taskIds } }); // Get related taskforworker entries
+    const taskForWorker = await taskforworker.find({
+      taskid: { $in: taskIds },
+    }); // Get related taskforworker entries
 
-    const combinedData = tasks.map(t => ({
+    const combinedData = tasks.map((t) => ({
       ...t.toObject(),
-      taskforworker_details: taskForWorker.filter(w => w.taskid.equals(t._id)),
+      taskforworker_details: taskForWorker.filter((w) =>
+        w.taskid.equals(t._id)
+      ),
     }));
 
     res.status(200).json({
@@ -695,30 +710,53 @@ router.get('/taskalldetail', async function (req, res, next) {
 router.use(express.json());
 router.use(express.urlencoded({ extended: true }));
 
-router.post('/addtaskforworker', async function (req, res) {
+router.post("/addtaskforworker", async function (req, res) {
   try {
     console.log("Request Body:", req.body);
 
-    const { taskid, name, task, detail,assigndate, duedate, workers, priority, status } = req.body;
+    const {
+      taskid,
+      name,
+      task,
+      detail,
+      assigndate,
+      duedate,
+      workers,
+      priority,
+      status,
+    } = req.body;
     const assignor = await user.findOne({ username: name });
-    const alldata=await user.find();
-    const validWorkerNames = alldata.map(worker => worker.username);
-    const invalidWorkers = workers.filter(worker => !validWorkerNames.includes(worker));
+    const alldata = await user.find();
+    const validWorkerNames = alldata.map((worker) => worker.username);
+    const invalidWorkers = workers.filter(
+      (worker) => !validWorkerNames.includes(worker)
+    );
 
     if (invalidWorkers.length > 0) {
       return res.status(400).json({
         status: "error",
-        message: `The following workers do not exist: ${invalidWorkers.join(', ')}`,
+        message: `The following workers do not exist: ${invalidWorkers.join(
+          ", "
+        )}`,
       });
     }
- // Validate required fields
-    if (!taskid || !name || !task || !assigndate || !duedate || !workers || !priority || !detail) {
+    // Validate required fields
+    if (
+      !taskid ||
+      !name ||
+      !task ||
+      !assigndate ||
+      !duedate ||
+      !workers ||
+      !priority ||
+      !detail
+    ) {
       return res.status(400).json({
         status: "error",
         message: "All fields are required",
       });
     }
-  
+
     // Check if assignor exists
     if (!assignor) {
       return res.status(404).json({
@@ -740,7 +778,7 @@ router.post('/addtaskforworker', async function (req, res) {
       actions,
       priority,
       detail,
-      status
+      status,
     });
 
     res.status(200).json({
@@ -762,7 +800,7 @@ module.exports = router;
 
 // -------------------------get-task-for-worker---------------
 
-router.post('/gettaskforworker', async function (req, res, next) {
+router.post("/gettaskforworker", async function (req, res, next) {
   try {
     const data = await taskforworker.find({ workers: req.body.name });
 
@@ -782,7 +820,7 @@ router.post('/gettaskforworker', async function (req, res, next) {
 // -------------------------get-task-for-worker-end---------------
 
 //------------------------ get perticular task---------------------
-router.post('/getpertitask/:id', async function (req, res, next) {
+router.post("/getpertitask/:id", async function (req, res, next) {
   try {
     const data = await task.findById(req.params.id);
 
@@ -802,9 +840,9 @@ router.post('/getpertitask/:id', async function (req, res, next) {
 
 // ---------------get-task-for manager---------------
 
-router.post('/gettask', async function (req, res, next) {
+router.post("/gettask", async function (req, res, next) {
   try {
-    const data = await task.find({ name: req.body.name });  
+    const data = await task.find({ name: req.body.name });
 
     res.status(200).json({
       status: "success",
@@ -823,7 +861,7 @@ router.post('/gettask', async function (req, res, next) {
 
 // ----------------get manager----------------
 
-router.get('/getman', async function (req, res, next) {
+router.get("/getman", async function (req, res, next) {
   try {
     const data = await user.find({ role: "TeamLead" });
 
@@ -832,7 +870,7 @@ router.get('/getman', async function (req, res, next) {
       data: data,
     });
   } catch (err) {
-    console.error(err); 
+    console.error(err);
     res.status(500).json({
       status: "error",
       message: "Internal server error",
@@ -850,8 +888,8 @@ router.get("/manageralldetail", async function (req, res, next) {
       name: m.username,
       role: m.role,
       email: m.email,
-      _id: m._id, 
-      mobile: m.mobile
+      _id: m._id,
+      mobile: m.mobile,
     }));
 
     res.status(200).json({
@@ -889,7 +927,7 @@ router.delete("/removemanager/:id", async (req, res) => {
 
 // -----------get worker--------------
 
-router.get('/getwor', async function (req, res, next) {
+router.get("/getwor", async function (req, res, next) {
   try {
     const data = await user.find({ role: "Associate" });
     console.log(data);
@@ -898,7 +936,7 @@ router.get('/getwor', async function (req, res, next) {
       data: data,
     });
   } catch (err) {
-    console.error(err); 
+    console.error(err);
     res.status(500).json({
       status: "error",
       message: "Internal server error",
@@ -926,17 +964,14 @@ router.delete("/removeworker/:id", async (req, res) => {
 
 // ----------------get worker end------------
 
-
-
 // ------------------------task assign start-----------------------
-router.post('/addtask', async function (req, res, next) {
+router.post("/addtask", async function (req, res, next) {
   try {
     console.log(req.body.username);
 
     // Find the worker by name
     var data = await user.findOne({ username: req.body.name });
 
-  
     if (!data) {
       return res.status(404).json({
         status: "error",
@@ -978,47 +1013,40 @@ router.post('/addtask', async function (req, res, next) {
 // ------------------task assign end------------------------
 
 // sign in
-router.post('/verify', async function (req, res, next) {
+router.post("/verify", async function (req, res, next) {
   try {
     var name = req.body.username;
     console.log(name);
 
-    var data = await user.findOne({ "username": name });
+    var data = await user.findOne({ username: name });
 
     if (data != null) {
-      var encrypt = await bcrypt.compare(req.body.password, data.password)
+      var encrypt = await bcrypt.compare(req.body.password, data.password);
       if (encrypt != false) {
         res.status(200).json({
           status: "done",
           data,
-        })
-      }
-      else {
+        });
+      } else {
         res.status(400).json({
           status: "password",
-          message: "invalid password"
-        })
+          message: "invalid password",
+        });
       }
-    }
-
-    else {
+    } else {
       res.status(400).json({
         status: "username",
         message: "invalid username",
-
-      })
+      });
     }
-
-
-  }
-  catch (err) {
+  } catch (err) {
     res.status(400).json({
       status: "err",
-    })
+    });
   }
 });
 
-router.get('/getuser', async function (req, res, next) {
+router.get("/getuser", async function (req, res, next) {
   try {
     const username = req.query.username; // Extract username from query params
     console.log("Fetching user:", username);
@@ -1044,9 +1072,9 @@ router.get('/getuser', async function (req, res, next) {
   }
 });
 
-const nodemailer = require('nodemailer');
+const nodemailer = require("nodemailer");
 
-router.post('/add', async function (req, res, next) {
+router.post("/add", async function (req, res, next) {
   try {
     console.log(req.body.username);
 
@@ -1061,32 +1089,34 @@ router.post('/add', async function (req, res, next) {
       domain: req.body.domain,
       mobile: req.body.mobile,
       password: crypt,
+      ischanged: false,
     };
 
     // Check if the email already exists
     const existingUser = await user.findOne({ email: req.body.email });
     if (existingUser) {
       return res.status(400).json({
-        status: 'err',
-        message: 'Email already exists. Please use a different email.',
+        status: "err",
+        message: "Email already exists. Please use a different email.",
       });
     }
 
     const existingMobile = await user.findOne({ mobile: req.body.mobile });
     if (existingMobile) {
       return res.status(400).json({
-        status: 'err',
-        message: 'Mobile number already exists. Please use a different mobile number.',
+        status: "err",
+        message:
+          "Mobile number already exists. Please use a different mobile number.",
       });
     }
 
     // Send email if the role is "manager" or "worker"
-    if (req.body.role === 'TeamLead' || req.body.role === 'Associate') {
+    if (req.body.role === "TeamLead" || req.body.role === "Associate") {
       const transporter = nodemailer.createTransport({
-        service: 'gmail', // Use your email service (e.g., Gmail, Outlook)
+        service: "gmail", // Use your email service (e.g., Gmail, Outlook)
         auth: {
-          user: 'devvaghani89@gmail.com',
-          pass: 'eriv ljjb mlsf wpdz',
+          user: "devvaghani89@gmail.com",
+          pass: "eriv ljjb mlsf wpdz",
         },
       });
 
@@ -1109,7 +1139,7 @@ router.post('/add', async function (req, res, next) {
 
           Best regards,  
           [TMC TASK MANAGEMENT SYSTEM]`,
-        };
+      };
 
       // Send the email
       await transporter.sendMail(mailOptions);
@@ -1120,21 +1150,21 @@ router.post('/add', async function (req, res, next) {
 
     // Send a success response
     res.status(200).json({
-      status: 'done',
+      status: "done",
     });
   } catch (err) {
     // Handle duplicate key error
     if (err.code === 11000) {
       return res.status(400).json({
-        status: 'err',
-        message: 'Duplicate entry. Email already exists.',
+        status: "err",
+        message: "Duplicate entry. Email already exists.",
       });
     }
 
-    console.error('Error:', err);
+    console.error("Error:", err);
     res.status(500).json({
-      status: 'err',
-      message: 'Internal server error',
+      status: "err",
+      message: "Internal server error",
     });
   }
 });
@@ -1143,21 +1173,20 @@ router.post('/add', async function (req, res, next) {
 
 // In-memory storage for OTPs
 let otpStorage = 0;
-let uemail = ''
+let uemail = "";
 
-router.post('/otp', async function (req, res, next) {
+router.post("/otp", async function (req, res, next) {
   try {
     const email = req.body.email;
 
     const loguser = await user.findOne({ email: email });
 
     if (loguser) {
-
       res.status(200).json({
-        status: "valid_user"
-      })
+        status: "valid_user",
+      });
 
-      var otp = Math.floor((Math.random() * 1000000) + 1);
+      var otp = Math.floor(Math.random() * 1000000 + 1);
 
       // Store OTP in memory (no expiration time)
       otpStorage = otp;
@@ -1176,7 +1205,7 @@ router.post('/otp', async function (req, res, next) {
 
           Best regards,  
           [TMC TASK MANAGEMENT SYSTEM]`,
-        };
+      };
 
       const transporter = nodemailer.createTransport({
         service: "gmail", // Use your email service (e.g., Gmail, Outlook)
@@ -1189,95 +1218,120 @@ router.post('/otp', async function (req, res, next) {
       const rk = transporter.sendMail(mailOptions, function (error, info) {
         if (error) {
           console.log(error);
-        } else {
-          console.log('Email sent: ' + info.response);
-          console.log('actual otp ' + otpStorage)
         }
       });
 
-      console.log('Email sent:', rk);
-      console.log('OTP sent:', otp);
-
+      // console.log('Email sent:', rk);
+      // console.log('OTP sent:', otp);
+    } else {
+      res.status(400).json({
+        status: "invalid_user",
+      });
     }
-    else {
-      res.status(200).json({
-        status: "invalid_user"
-      })
-    }
-  }
-  catch {
+  } catch {
     res.status(400).json({
       status: "err",
-      message: "Internal server error"
-    })
+      message: "Internal server error",
+    });
   }
-})
+});
 
-router.post('/checkotp', async function (req, res, next) {
-
+router.post("/checkotp", async function (req, res, next) {
   const userotp = req.body.otp;
 
   try {
     if (parseInt(userotp) == parseInt(otpStorage)) {
       res.status(200).json({
-        status: "otp_varified"
-      })
-    }
-    else {
+        status: "otp_varified",
+      });
+    } else {
       res.status(200).json({
-        status: "otp_error"
-      })
+        status: "otp_error",
+      });
     }
-
   } catch (error) {
     res.status(400).json({
       status: "err",
-    })
+    });
   }
-})
+});
 
 // for new password
-router.post('/newpassword', async function (req, res, next) {
 
+router.post("/newpassword", async function (req, res) {
   const newpassword = req.body.newpassword;
   const rnewpassword = req.body.rnewpassword;
-  // const email = req.body.email;
-  // const email = 'dev@gail.com'
 
-  console.log(newpassword, rnewpassword)
+  console.log(newpassword, rnewpassword);
+
+  if (!newpassword || !rnewpassword || !uemail) {
+    return res.status(400).json({ status: "error", message: "Missing fields" });
+  }
 
   try {
-    if (newpassword == rnewpassword) {
-      console.log("email", uemail);
-    const crypt = await bcrypt.hash(newpassword, 10);
-      const updateuser = await user.findOneAndUpdate(
-        { email: uemail },
-        { password: crypt }
-      );
+    // Fetch the user from DB
+    console.log(uemail);
+    const existingUser = await user.findOne({ email: uemail });
 
-      console.log(updateuser)
-      
-      if (updateuser) {
-        res.status(200).json({
-          status: "changed"
-        })
-      } else {
-        res.status(200).json({
-          status: "notchanged"
-        })
-      }
-    }
-    else {
-      res.status(200).json({
-        status: "otp_error"
-      })
+    if (!existingUser) {
+      return res
+        .status(404)
+        .json({ status: "error", message: "User not found" });
     }
 
+    // Check if new password matches the old password
+    const isSameAsOld = await bcrypt.compare(
+      existingUser.password,
+      newpassword
+    );
+    console.log(isSameAsOld);
+    if (isSameAsOld) {
+      return res.status(400).json({
+        status: "error",
+        message: "New password cannot be the same as old password",
+      });
+    }
+
+    // Check if password is the same as the username
+    if (newpassword.toLowerCase() === existingUser.username.toLowerCase()) {
+      return res.status(400).json({
+        status: "error",
+        message: "Password cannot be the same as username",
+      });
+    }
+
+    // Check if passwords match
+    if (newpassword !== rnewpassword) {
+      return res
+        .status(400)
+        .json({ status: "error", message: "Passwords do not match" });
+    }
+
+    // Hash the new password
+    const hashedPassword = await bcrypt.hash(newpassword, 10);
+
+    // Update password in the database
+    const updateUser = await user.findOneAndUpdate(
+      { email: uemail },
+      { password: hashedPassword, ischanged: true },
+      { new: true }
+    );
+
+    if (updateUser) {
+      return res
+        .status(200)
+        .json({ status: "changed", message: "Password updated successfully" });
+    } else {
+      return res
+        .status(500)
+        .json({ status: "error", message: "Failed to update password" });
+    }
   } catch (error) {
-    res.status(400).json({
-      status: "err",
-    })
+    console.error("Password change error:", error);
+    return res
+      .status(500)
+      .json({ status: "error", message: "Internal server error" });
   }
-})
+});
 
 module.exports = router;

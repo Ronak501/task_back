@@ -20,6 +20,9 @@ const schema = new Schema({
     password:({
         type:String,
     }),
+    ischanged:({
+        type:Boolean,
+    })
 })
 
 const MyModel = mongoose.model('registrations', schema);
