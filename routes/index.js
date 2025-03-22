@@ -703,6 +703,23 @@ router.get("/taskalldetail", async function (req, res, next) {
   }
 });
 
+router.get("/taskforworkerdetail", async function (req, res, next) {
+  try {
+    const tasks = await taskforworker.find(); // Get tasks
+
+    res.status(200).json({
+      status: "done",
+      data: tasks,
+    });
+  } catch (err) {
+    console.error("Error:", err.message);
+    res.status(500).json({
+      status: "error",
+      message: "Failed to fetch task details",
+    });
+  }
+});
+
 // ------------end joint-------------------
 
 // -----------------------add task for worker---------------
