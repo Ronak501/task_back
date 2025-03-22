@@ -1,44 +1,44 @@
-#!/usr/bin/env node
-
-/**
- * Module dependencies.
- */
-
-var app = require("../app");
-var debug = require("debug")("clg-2025-backend:server");
-var http = require("http");
+const { app, server } = require("../app");
+const debug = require("debug")("your-app:server");
 const mongoose = require("mongoose");
 
 /**
  * Get port from environment and store in Express.
  */
 
-var port = normalizePort(process.env.PORT || "3535");
+const port = normalizePort(process.env.PORT || "3535");
 app.set("port", port);
+
+/**
+ * Connect to MongoDB
+ */
+const MONGO_URI =
+  "mongodb+srv://Ronak:Ronak123@task.nabdt.mongodb.net/?retryWrites=true&w=majority&appName=Task";
+
 mongoose
-  .connect("mongodb://127.0.0.1:27017/Clg")
-  .then(() => console.log("Connected!"));
+  .connect(MONGO_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
+  .then(() => {
+    console.log("✅ Connected to MongoDB Atlas");
 
-/**
- * Create HTTP server.
- */
-
-var server = http.createServer(app);
-
-/**
- * Listen on provided port, on all network interfaces.
- */
-
-server.listen(port);
-server.on("error", onError);
-server.on("listening", onListening);
+    /**
+     * Listen on provided port, on all network interfaces.
+     */
+    server.listen(port);
+    server.on("error", onError);
+    server.on("listening", onListening);
+    console.log(`🚀 Server is running on port ${port}`);
+  })
+  .catch((err) => console.error("❌ Failed to connect to MongoDB:", err));
 
 /**
  * Normalize a port into a number, string, or false.
  */
 
 function normalizePort(val) {
-  var port = parseInt(val, 10);
+  const port = parseInt(val, 10);
 
   if (isNaN(port)) {
     // named pipe
@@ -62,7 +62,7 @@ function onError(error) {
     throw error;
   }
 
-  var bind = typeof port === "string" ? "Pipe " + port : "Port " + port;
+  const bind = typeof port === "string" ? "Pipe " + port : "Port " + port;
 
   // handle specific listen errors with friendly messages
   switch (error.code) {
@@ -84,7 +84,7 @@ function onError(error) {
  */
 
 function onListening() {
-  var addr = server.address();
-  var bind = typeof addr === "string" ? "pipe " + addr : "port " + addr.port;
+  const addr = server.address();
+  const bind = typeof addr === "string" ? "pipe " + addr : "port " + addr.port;
   debug("Listening on " + bind);
 }
