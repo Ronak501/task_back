@@ -7,7 +7,6 @@ const bcrypt = require("bcrypt");
 const mongoose = require("mongoose");
 const manager = require("../models/manager");
 const multer = require("multer");
-const path = require("path");
 const fs = require("fs");
 const nodemailer = require("nodemailer");
 
