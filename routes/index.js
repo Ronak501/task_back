@@ -17,6 +17,39 @@ router.get("/", function (req, res, next) {
   res.render("index", { title: "Express" });
 });
 
+router.post("/verify", async function (req, res, next) {
+  try {
+    var name = req.body.username;
+    console.log(name);
+
+    var data = await user.findOne({ username: name });
+
+    if (data != null) {
+      var encrypt = await bcrypt.compare(req.body.password, data.password);
+      if (encrypt != false) {
+        res.status(200).json({
+          status: "done",
+          data,
+        });
+      } else {
+        res.status(400).json({
+          status: "password",
+          message: "invalid password",
+        });
+      }
+    } else {
+      res.status(400).json({
+        status: "username",
+        message: "invalid username",
+      });
+    }
+  } catch (err) {
+    res.status(400).json({
+      status: "err",
+    });
+  }
+});
+
 cloudinary.config({
   cloud_name: process.env.CLOUD_NAME,
   api_key: process.env.API_KEY,
@@ -1342,38 +1375,6 @@ router.post("/addtask", async function (req, res, next) {
 // ------------------task assign end------------------------
 
 // sign in
-router.post("/verify", async function (req, res, next) {
-  try {
-    var name = req.body.username;
-    console.log(name);
-
-    var data = await user.findOne({ username: name });
-
-    if (data != null) {
-      var encrypt = await bcrypt.compare(req.body.password, data.password);
-      if (encrypt != false) {
-        res.status(200).json({
-          status: "done",
-          data,
-        });
-      } else {
-        res.status(400).json({
-          status: "password",
-          message: "invalid password",
-        });
-      }
-    } else {
-      res.status(400).json({
-        status: "username",
-        message: "invalid username",
-      });
-    }
-  } catch (err) {
-    res.status(400).json({
-      status: "err",
-    });
-  }
-});
 
 router.get("/getuser", async function (req, res, next) {
   try {
