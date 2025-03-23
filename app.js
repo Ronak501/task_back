@@ -4,19 +4,31 @@ var path = require("path");
 var cookieParser = require("cookie-parser");
 var logger = require("morgan");
 var cors = require("cors");
+var mongoose = require("mongoose");
+require("dotenv").config();
 
-var indexRouter = require("./routes/index");
+var indexRouter = require("./routes/index"); // ✅ Correct path
 var usersRouter = require("./routes/users");
 
 var app = express();
+
+// ✅ Enable CORS
 var corsOptions = {
   origin: process.env.FRONTEND_URL,
   optionsSuccessStatus: 200,
 };
-
 app.use(cors(corsOptions));
 
-// View engine setup
+// ✅ Connect to MongoDB
+mongoose
+  .connect(process.env.MONGO_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
+  .then(() => console.log("✅ Connected to MongoDB Atlas"))
+  .catch((err) => console.error("❌ Failed to connect to MongoDB:", err));
+
+// ✅ Middleware
 app.set("views", path.join(__dirname, "views"));
 app.set("view engine", "ejs");
 
@@ -26,13 +38,8 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "public")));
 
-app.use("/", indexRouter);
+app.use("/index", indexRouter);
 app.use("/users", usersRouter);
-
-app.use(
-  "/favicon.ico",
-  express.static(path.join(__dirname, "public", "favicon.ico"))
-);
 
 // Handle 404 errors
 app.use(function (req, res, next) {
@@ -43,10 +50,9 @@ app.use(function (req, res, next) {
 app.use(function (err, req, res, next) {
   res.locals.message = err.message;
   res.locals.error = req.app.get("env") === "development" ? err : {};
-
   res.status(err.status || 500);
   res.render("error");
 });
 
-// ✅ Export only `app` for Vercel (no `server`)
+// ✅ Export `app` (No `app.listen()`)
 module.exports = app;
