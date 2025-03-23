@@ -11,6 +11,7 @@ var usersRouter = require("./routes/users");
 var app = express();
 var corsOptions = {
   origin: process.env.FRONTEND_URL,
+  methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
   optionsSuccessStatus: 200,
 };
 
