@@ -29,6 +29,11 @@ app.use(express.static(path.join(__dirname, "public")));
 app.use("/", indexRouter);
 app.use("/users", usersRouter);
 
+app.use(
+  "/favicon.ico",
+  express.static(path.join(__dirname, "public", "favicon.ico"))
+);
+
 // Handle 404 errors
 app.use(function (req, res, next) {
   next(createError(404));
