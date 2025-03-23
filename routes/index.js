@@ -9,24 +9,36 @@ const manager = require("../models/manager");
 const multer = require("multer");
 const fs = require("fs");
 const nodemailer = require("nodemailer");
+const cloudinary = require('cloudinary').v2;  // Import Cloudinary
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
 
 /* GET home page. */
 router.get("/", function (req, res, next) {
   res.render("index", { title: "Express" });
 });
 
-if (!fs.existsSync("./uploads")) {
-  fs.mkdirSync("./uploads");
-}
+cloudinary.config({
+  cloud_name: process.env.CLOUD_NAME,
+  api_key: process.env.API_KEY,
+  api_secret: process.env.API_SECRET,
+});
 
-// File Upload Configuration
-const storage = multer.diskStorage({
-  destination: "./uploads/",
-  filename: (req, file, cb) => {
-    cb(null, `${Date.now()}-${file.originalname}`);
+// Configure Multer to Use Cloudinary
+const storage = new CloudinaryStorage({
+  cloudinary,
+  params: {
+    folder: "uploads", // Cloudinary folder name
+    format: async (req, file) => "png", // Force PNG format
+    public_id: (req, file) => Date.now() + "-" + file.originalname,
   },
 });
+
 const upload = multer({ storage });
+
+// File Upload Route
+router.post("/upload", upload.single("file"), (req, res) => {
+  res.json({ url: req.file.path });
+});
 
 // Message Schema for chat functionality
 let Message;
