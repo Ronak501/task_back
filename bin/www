@@ -6,6 +6,8 @@ var logger = require("morgan");
 var cors = require("cors");
 var mongoose = require("mongoose");
 require("dotenv").config();
+var debug = require("debug")("clg-2025-backend:server");
+var http = require("http");
 
 var indexRouter = require("../routes/index");
 var usersRouter = require("../routes/users");
@@ -19,7 +21,7 @@ var corsOptions = {
 };
 app.use(cors(corsOptions));
 
-// ✅ Connect to MongoDB (Moved from `www`)
+// ✅ Connect to MongoDB
 mongoose
   .connect(process.env.MONGO_URI, {
     useNewUrlParser: true,
@@ -55,5 +57,13 @@ app.use(function (err, req, res, next) {
   res.render("error");
 });
 
-// ✅ Export ONLY `app` for Vercel (no `server`)
+// ✅ Create HTTP Server
+var server = http.createServer(app);
+
+// ✅ Start the server on a specific port
+const PORT = process.env.PORT || 3535;
+server.listen(PORT, () => {
+  console.log(`🚀 Server running on http://localhost:${PORT}`);
+});
+
 module.exports = app;

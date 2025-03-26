@@ -7,7 +7,6 @@ const bcrypt = require("bcryptjs");
 const mongoose = require("mongoose");
 const manager = require("../models/manager");
 const multer = require("multer");
-const fs = require("fs");
 const nodemailer = require("nodemailer");
 const cloudinary = require('cloudinary').v2;  // Import Cloudinary
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
