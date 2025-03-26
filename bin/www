@@ -6,9 +6,6 @@ var logger = require("morgan");
 var cors = require("cors");
 var mongoose = require("mongoose");
 require("dotenv").config();
-var debug = require("debug")("clg-2025-backend:server");
-var http = require("http");
-var { Server } = require("socket.io");
 
 var indexRouter = require("../routes/index");
 var usersRouter = require("../routes/users");
@@ -32,7 +29,7 @@ mongoose
   .catch((err) => console.error("❌ Failed to connect to MongoDB:", err));
 
 // ✅ Middleware
-app.set("views", path.join(__dirname, "../views"));
+app.set("views", path.join(__dirname, "views"));
 app.set("view engine", "ejs");
 
 app.use(logger("dev"));
@@ -58,13 +55,10 @@ app.use(function (err, req, res, next) {
   res.render("error");
 });
 
-// ✅ Create HTTP Server
-var server = http.createServer(app);
-
 // ✅ Start the server on a specific port
 const PORT = process.env.PORT || 3535;
-server.listen(PORT, () => {
+app.listen(PORT, () => {
   console.log(`🚀 Server running on http://localhost:${PORT}`);
 });
 
-module.exports = { app, server};
+module.exports = app;
