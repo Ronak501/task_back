@@ -581,6 +581,19 @@ router.patch("/updatetask/:id", async (req, res) => {
         .json({ status: "error", message: "Invalid task ID format." });
     }
 
+    // Check if task name is change
+    const taskExists = await task.findById(id);
+    if (!taskExists) {
+      console.log("❌ Task not found in DB");
+      return res
+        .status(404)
+        .json({ status: "error", message: "Task not found." });
+    }
+
+    if (updateFields.name !== taskExists.name) {
+      updateFields.manageraction = "initiated"; // Reset manager action if name changes
+    }
+
     // Find the task and update only given fields (excluding subtasks)
     const updatedTask = await task.findByIdAndUpdate(
       id,
@@ -775,6 +788,15 @@ router.post("/addtaskforworker", async function (req, res) {
       priority,
       status,
     } = req.body;
+
+    const findtaskname = await taskforworker.findOne({ task: task });
+    if (findtaskname) {
+      return res.status(400).json({
+        status: "error",
+        message: "Task Name already exists",
+      });
+    }
+
     const assignor = await user.findOne({ username: name });
     const alldata = await user.find();
     const validWorkerNames = alldata.map((worker) => worker.username);
@@ -1117,12 +1139,11 @@ router.post("/add", async function (req, res, next) {
       });
     }
 
-    const existingMobile = await user.findOne({ mobile: req.body.mobile });
-    if (existingMobile) {
+    const existingUsername = await user.findOne({ username: req.body.username });
+    if (existingUsername) {
       return res.status(400).json({
         status: "err",
-        message:
-          "Mobile number already exists. Please use a different mobile number.",
+        message: "Username already exists. Please use a different username.",
       });
     }
 
