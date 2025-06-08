@@ -1019,7 +1019,7 @@ router.get("/getwor", async function (req, res, next) {
 router.delete("/removeworker/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    const deletedWorker = await Worker.findByIdAndDelete(id);
+    const deletedWorker = await user.findByIdAndDelete(id);
 
     if (!deletedWorker) {
       return res
