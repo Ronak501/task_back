@@ -7,6 +7,8 @@ const bcrypt = require("bcryptjs");
 const mongoose = require("mongoose");
 const manager = require("../models/manager");
 const nodemailer = require("nodemailer");
+const Notification = require("../models/Notification");
+const { io } = require("../routes/server");
 
 router.get("/", function (req, res, next) {
   res.render("index", { title: "Express" });
@@ -1069,6 +1071,35 @@ router.post("/addtask", async function (req, res, next) {
     };
 
     await task.create(obj);
+
+    await user.findOne({ username: req.body.name }, async (err, user) => {
+      if (err) {
+        console.error("Error finding user:", err);
+        return res.status(500).json({
+          status: "error",
+          message: "Internal server error",
+        });
+      }
+
+      if (!user) {
+        return res.status(404).json({
+          status: "error",
+          message: "User not found",
+        });
+      }
+    });
+
+    const notification = await Notification.create({
+      userId: user._id,
+      message: `A new task '${title}' has been assigned to you.`,
+      taskId: task._id,
+      isRead: false,
+    });
+
+    // Emit real-time notification
+    if (onlineUsers[assignedTo]) {
+      io.to(onlineUsers[assignedTo]).emit("newNotification", notification);
+    }
 
     res.status(200).json({
       status: "done",
